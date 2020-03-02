@@ -2,6 +2,7 @@
 #define WIDGET_H
 
 #include <QWidget>
+#include "cmask.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -19,8 +20,7 @@ public:
 
 private:
     Ui::Widget *ui;
-
-    void setAlpha(QImage& image,int alpha);
+    CMask* m_mask;
 
 public slots:
     void slt_openBackFile();
