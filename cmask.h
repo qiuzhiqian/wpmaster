@@ -17,6 +17,7 @@ public:
     void setFront(const QImage& image);
     void setAlpha(int alpha);
     void setRadius(int radius);
+    void setMask(int x,int y);
 private:
     QImage m_back;
     QImage m_front;

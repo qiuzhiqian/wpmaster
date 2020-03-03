@@ -5,14 +5,13 @@
 #include <QByteArray>
 #include <QThread>
 
+Widget* w=nullptr;
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    Widget w;
+    w=new Widget();
 
-    //HWND current = (HWND)w.winId();
-    //SetParent(current,background);
-    w.show();
+    w->show();
     return a.exec();
 }

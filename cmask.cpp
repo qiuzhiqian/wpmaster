@@ -6,10 +6,11 @@
 
 CMask::CMask(QWidget *parent) : QWidget(parent),
     m_mask(QRect(100,100,1000,1000)),
-    m_alpha(255),
+    m_alpha(10),
     m_radius(200)
 {
     setMouseTracking(true);
+     m_mask = QRect(0,0,m_radius,m_radius);
 }
 
 CMask::CMask(const QImage& back,const QImage& front,QWidget *parent) :
@@ -17,11 +18,12 @@ CMask::CMask(const QImage& back,const QImage& front,QWidget *parent) :
     m_back(back),
     m_front(front),
     m_mask(QRect(0,0,200,200)),
-    m_alpha(255),
+    m_alpha(10),
     m_radius(200)
 
 {
     setMouseTracking(true);
+     m_mask = QRect(0,0,m_radius,m_radius);
 }
 
 void CMask::setBack(const QImage &image){
@@ -38,6 +40,10 @@ void CMask::setAlpha(int alpha){
 
 void CMask::setRadius(int radius){
     m_radius = radius;
+}
+
+void CMask::setMask(int x,int y){
+    m_mask = QRect(x-m_radius/2,y-m_radius/2,m_radius,m_radius);
 }
 
 void CMask::paintEvent(QPaintEvent *event){

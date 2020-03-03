@@ -18,6 +18,8 @@ public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
 
+    CMask* getMask(){return m_mask;}
+
 private:
     Ui::Widget *ui;
     CMask* m_mask;
@@ -31,5 +33,7 @@ public slots:
     void slt_windowClose();
     void slt_windowMax();
     void slt_windowMin();
+
+    void slt_test();
 };
 #endif // WIDGET_H

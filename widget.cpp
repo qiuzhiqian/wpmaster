@@ -10,6 +10,27 @@
 #include <QColor>
 #include <QScreen>
 
+HHOOK mouseHook=NULL;
+
+extern Widget* w;
+LRESULT CALLBACK mouseProc(int nCode,WPARAM wParam,LPARAM lParam )
+{
+    if(nCode == HC_ACTION) //当nCode等于HC_ACTION时，要求得到处理
+    {
+       if(wParam==WM_MOUSEMOVE)//鼠标的移动
+       {
+           POINT p;
+           GetCursorPos(&p);//获取鼠标坐标
+            CMask* mask = w->getMask();
+            mask->setMask(p.x,p.y);
+            //双薪壁纸
+            mask->update();
+       }
+    }
+    //qDebug()<<nCode<<","<<wParam<<","<<lParam;
+    return CallNextHookEx(mouseHook,nCode,wParam,lParam);//返回给下一个钩子子程处理
+}
+
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::Widget)
@@ -20,10 +41,7 @@ Widget::Widget(QWidget *parent)
 
     m_mask = new CMask(nullptr);
     m_mask->setWindowFlags(Qt::FramelessWindowHint);
-    //m_mask->setFixedSize(1200,1000);
 
-    //QDesktopWidget* pDesktopWidget = QApplication::desktop();
-    //获取可用桌面大小
     QList<QScreen *> screenList = QGuiApplication::screens();
 
     if(screenList.size()>0){
@@ -32,14 +50,14 @@ Widget::Widget(QWidget *parent)
         return;
     }
 
-    //ui->verticalLayout->insertWidget(0,m_mask);
-
     connect(ui->btn_openback,SIGNAL(clicked(bool)),this,SLOT(slt_openBackFile()));
     connect(ui->btn_openfront,SIGNAL(clicked(bool)),this,SLOT(slt_openFrontFile()));
     connect(ui->sld_alpha,SIGNAL(valueChanged(int)),this,SLOT(slt_alphaChange(int)));
     connect(ui->btn_save,SIGNAL(clicked(bool)),this,SLOT(slt_save()));
+    connect(ui->btn_test,SIGNAL(clicked(bool)),this,SLOT(slt_test()));
 
     connect(ui->btn_close,SIGNAL(clicked(bool)),this,SLOT(slt_windowClose()));
+    connect(ui->btn_min,SIGNAL(clicked(bool)),this,SLOT(slt_windowMin()));
     //qDebug() << "min:" << ui->sld_alpha->minimum();
     //qDebug() << "max:" << ui->sld_alpha->maximum();
 
@@ -56,8 +74,7 @@ Widget::Widget(QWidget *parent)
                 int err = GetLastError();
                 qDebug()<<"err:"<<err;
             }
-            QString className = QString::fromUtf16((char16_t*)buff);
-            qDebug()<<"classname:"<<className;
+            //QString className = QString::fromUtf16((char16_t*)buff);
         }
         if(GetParent(worker) == hwnd){
             background = worker;
@@ -72,7 +89,6 @@ Widget::Widget(QWidget *parent)
 Widget::~Widget()
 {
     delete ui;
-    qDebug()<<"exit4";
 }
 
 void Widget::slt_openBackFile(){
@@ -97,13 +113,12 @@ void Widget::slt_save(){
 }
 
 void Widget::slt_windowClose(){
-    //HWND current = (HWND)m_mask->winId();
-    //SetParent(current,background);
-    qDebug()<<"exit1";
-    //m_mask->deleteLater();
-    qDebug()<<"exit2";
     delete m_mask;
-    qDebug()<<"exit3";
+
+    //调用该函数刷新壁纸，使得壁纸恢复
+    SystemParametersInfoA(SPI_SETDESKWALLPAPER,0,NULL,SPIF_SENDWININICHANGE);
+
+    //关闭窗口
     this->close();
 }
 
@@ -112,6 +127,10 @@ void Widget::slt_windowMax(){
 }
 
 void Widget::slt_windowMin(){
-
+    this->showMinimized();
 }
 
+void Widget::slt_test(){
+    qDebug()<<"register hook";
+    mouseHook =SetWindowsHookEx( WH_MOUSE_LL,mouseProc,GetModuleHandle(NULL),NULL);//注册鼠标钩子
+}
