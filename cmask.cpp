@@ -51,7 +51,7 @@ void CMask::paintEvent(QPaintEvent *event){
 
 void CMask::mouseMoveEvent(QMouseEvent *event){
     QWidget::mouseMoveEvent(event);
-    //qDebug()<<event->pos();
+    qDebug()<<event->pos();
 
     m_mask = QRect(event->pos().x()-m_radius/2,event->pos().y()-m_radius/2,m_radius,m_radius);
     update();
