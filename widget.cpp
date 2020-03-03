@@ -134,3 +134,14 @@ void Widget::slt_test(){
     qDebug()<<"register hook";
     mouseHook =SetWindowsHookEx( WH_MOUSE_LL,mouseProc,GetModuleHandle(NULL),NULL);//注册鼠标钩子
 }
+
+void Widget::mousePressEvent(QMouseEvent *event){
+    m_lastPos = event->globalPos();
+    QWidget::mousePressEvent(event);
+}
+
+void Widget::mouseMoveEvent(QMouseEvent *event){
+    move(this->pos()+(event->globalPos()-m_lastPos));
+    m_lastPos = event->globalPos();
+    QWidget::mouseMoveEvent(event);
+}

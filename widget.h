@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include "cmask.h"
+#include <QPoint>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -24,6 +25,8 @@ private:
     Ui::Widget *ui;
     CMask* m_mask;
 
+    QPoint m_lastPos;
+
 public slots:
     void slt_openBackFile();
     void slt_openFrontFile();
@@ -35,5 +38,10 @@ public slots:
     void slt_windowMin();
 
     void slt_test();
+
+protected:
+
+    virtual void mousePressEvent(QMouseEvent *event) override;
+    virtual void mouseMoveEvent(QMouseEvent *event) override;
 };
 #endif // WIDGET_H
