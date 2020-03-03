@@ -7,6 +7,8 @@ https://github.com/qiuzhiqian/wallpaper[地址]
 
 前两天突然发现了wallpaper engine这个软件，然后在创意工坊中打开了新世界，感觉挺炫酷的。于是想着看自己能不能照着实现一些类似的特性。于是就有了这个工程。
 
+https://github.com/qiuzhiqian/wpmaster[本项目地址]
+
 == 预览
 
 image::https://raw.githubusercontent.com/qiuzhiqian/wpmaster/master/doc/image/review_1.gif[操作]
