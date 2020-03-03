@@ -27,5 +27,9 @@ public slots:
     void slt_openFrontFile();
     void slt_alphaChange(int value);
     void slt_save();
+
+    void slt_windowClose();
+    void slt_windowMax();
+    void slt_windowMin();
 };
 #endif // WIDGET_H

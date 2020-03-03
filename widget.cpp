@@ -8,6 +8,7 @@
 #include <QDebug>
 #include <QRgb>
 #include <QColor>
+#include <QScreen>
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -17,7 +18,17 @@ Widget::Widget(QWidget *parent)
 
     m_mask = new CMask(nullptr);
     m_mask->setWindowFlags(Qt::FramelessWindowHint);
-    m_mask->setFixedSize(1200,1000);
+    //m_mask->setFixedSize(1200,1000);
+
+    //QDesktopWidget* pDesktopWidget = QApplication::desktop();
+    //获取可用桌面大小
+    QList<QScreen *> screenList = QGuiApplication::screens();
+
+    if(screenList.size()>0){
+        m_mask->setFixedSize(screenList.at(0)->availableSize());
+    }else{
+        return;
+    }
 
     //ui->verticalLayout->insertWidget(0,m_mask);
 
@@ -25,6 +36,8 @@ Widget::Widget(QWidget *parent)
     connect(ui->btn_openfront,SIGNAL(clicked(bool)),this,SLOT(slt_openFrontFile()));
     connect(ui->sld_alpha,SIGNAL(valueChanged(int)),this,SLOT(slt_alphaChange(int)));
     connect(ui->btn_save,SIGNAL(clicked(bool)),this,SLOT(slt_save()));
+
+    connect(ui->btn_close,SIGNAL(clicked(bool)),this,SLOT(slt_windowClose()));
     //qDebug() << "min:" << ui->sld_alpha->minimum();
     //qDebug() << "max:" << ui->sld_alpha->maximum();
 
@@ -56,11 +69,6 @@ Widget::Widget(QWidget *parent)
 
 Widget::~Widget()
 {
-    qDebug()<<"exit1";
-    m_mask->deleteLater();
-    qDebug()<<"exit2";
-    delete m_mask;
-    qDebug()<<"exit3";
     delete ui;
     qDebug()<<"exit4";
 }
@@ -84,5 +92,24 @@ void Widget::slt_alphaChange(int value){
 }
 
 void Widget::slt_save(){
+}
+
+void Widget::slt_windowClose(){
+    //HWND current = (HWND)m_mask->winId();
+    //SetParent(current,background);
+    qDebug()<<"exit1";
+    //m_mask->deleteLater();
+    qDebug()<<"exit2";
+    delete m_mask;
+    qDebug()<<"exit3";
+    this->close();
+}
+
+void Widget::slt_windowMax(){
+
+}
+
+void Widget::slt_windowMin(){
+
 }
 

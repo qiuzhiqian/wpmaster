@@ -37,21 +37,21 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="btn_min">
        <property name="text">
         <string>Min</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_2">
+      <widget class="QPushButton" name="btn_max">
        <property name="text">
         <string>Max</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_3">
+      <widget class="QPushButton" name="btn_close">
        <property name="text">
         <string>Close</string>
        </property>
