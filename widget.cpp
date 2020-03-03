@@ -16,6 +16,8 @@ Widget::Widget(QWidget *parent)
 {
     ui->setupUi(this);
 
+    this->setWindowFlags(Qt::FramelessWindowHint);
+
     m_mask = new CMask(nullptr);
     m_mask->setWindowFlags(Qt::FramelessWindowHint);
     //m_mask->setFixedSize(1200,1000);
