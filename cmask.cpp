@@ -49,10 +49,7 @@ void CMask::setMask(int x,int y){
 void CMask::paintEvent(QPaintEvent *event){
     QWidget::paintEvent(event);
     QPainter painter(this);
-    painter.drawImage(this->rect(),m_back,this->rect());
-    QImage tmpImage = m_front;
-    setImageAlpha(tmpImage,m_mask,m_alpha);
-    painter.drawImage(this->rect(),tmpImage,this->rect());
+    painter.drawImage(this->rect(),layerAdd(m_front,m_back,m_mask),this->rect());
 }
 
 void CMask::mouseMoveEvent(QMouseEvent *event){
@@ -61,6 +58,28 @@ void CMask::mouseMoveEvent(QMouseEvent *event){
 
     m_mask = QRect(event->pos().x()-m_radius/2,event->pos().y()-m_radius/2,m_radius,m_radius);
     update();
+}
+
+const QImage CMask::layerAdd(const QImage& base,const QImage& ext,QRect rect){
+    QImage retImage(base);
+    int startx = qMax(0,rect.x());
+    int starty = qMax(0,rect.y());
+    int endx = qMin(base.size().width(),rect.x()+rect.width());
+    int endy = qMin(base.size().height(),rect.y()+rect.height());
+
+    QRegion regionExt(ext.rect(),QRegion::Rectangle);
+    QRegion regionCursor(rect,QRegion::Ellipse);
+
+
+    for(int y=starty;y<endy;y++){
+        for(int x=startx;x<endx;x++){
+            if(regionCursor.contains(QPoint(x,y))&&regionExt.contains(QPoint(x,y))){
+                //*(pData+(y*width+x)*4+3) = alpha;
+                retImage.setPixelColor(x,y,ext.pixelColor(x,y));
+            }
+        }
+    }
+    return retImage;
 }
 
 void CMask::setImageAlpha(QImage &image,const QRect& rect,int alpha){

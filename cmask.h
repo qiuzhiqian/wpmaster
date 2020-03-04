@@ -26,6 +26,7 @@ private:
     int m_radius;
 
     void setImageAlpha(QImage &image,const QRect& rect,int alpha);
+    const QImage layerAdd(const QImage& base,const QImage& ext,QRect rect);
 protected:
     virtual void paintEvent(QPaintEvent *event) override;
     virtual void mouseMoveEvent(QMouseEvent *event) override;
