@@ -16,13 +16,17 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    cmaker.cpp \
     cmask.cpp \
+    cutils.cpp \
     hwndnode.cpp \
     main.cpp \
     widget.cpp
 
 HEADERS += \
+    cmaker.h \
     cmask.h \
+    cutils.h \
     hwndnode.h \
     widget.h
 

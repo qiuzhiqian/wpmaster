@@ -9,6 +9,8 @@
 #include <QRgb>
 #include <QColor>
 #include <QScreen>
+#include <QFile>
+#include <QByteArray>
 
 HHOOK mouseHook=NULL;
 
@@ -23,7 +25,7 @@ LRESULT CALLBACK mouseProc(int nCode,WPARAM wParam,LPARAM lParam )
            GetCursorPos(&p);//获取鼠标坐标
             CMask* mask = w->getMask();
             mask->setMask(p.x,p.y);
-            //双薪壁纸
+            //刷新壁纸
             mask->update();
        }
     }
@@ -55,6 +57,7 @@ Widget::Widget(QWidget *parent)
     connect(ui->sld_alpha,SIGNAL(valueChanged(int)),this,SLOT(slt_alphaChange(int)));
     connect(ui->btn_save,SIGNAL(clicked(bool)),this,SLOT(slt_save()));
     connect(ui->btn_test,SIGNAL(clicked(bool)),this,SLOT(slt_test()));
+    connect(ui->btn_make,SIGNAL(clicked(bool)),this,SLOT(slt_make()));
 
     connect(ui->btn_close,SIGNAL(clicked(bool)),this,SLOT(slt_windowClose()));
     connect(ui->btn_min,SIGNAL(clicked(bool)),this,SLOT(slt_windowMin()));
@@ -112,6 +115,27 @@ void Widget::slt_alphaChange(int value){
 void Widget::slt_save(){
 }
 
+void Widget::slt_make(){
+    QString dirpath = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
+                                                      QDir::currentPath(),
+                                                      QFileDialog::ShowDirsOnly
+                                                      | QFileDialog::DontResolveSymlinks);
+
+    qDebug()<<"path:"<<dirpath;
+
+    if(m_thread!=nullptr || m_maker!=nullptr){
+        return;
+    }
+    m_thread = new QThread(this);
+    m_maker = new CMaker(dirpath);
+
+    m_maker->moveToThread(m_thread);
+    connect(m_thread,SIGNAL(started()),m_maker,SLOT(start()));
+    connect(m_maker,SIGNAL(end()),this,SLOT(slt_makeEnd()));
+
+    m_thread->start();
+}
+
 void Widget::slt_windowClose(){
     delete m_mask;
 
@@ -133,6 +157,20 @@ void Widget::slt_windowMin(){
 void Widget::slt_test(){
     qDebug()<<"register hook";
     mouseHook =SetWindowsHookEx( WH_MOUSE_LL,mouseProc,GetModuleHandle(NULL),NULL);//注册鼠标钩子
+}
+
+void Widget::slt_makeEnd(){
+    if(m_thread!=nullptr){
+        m_thread->terminate();
+        delete m_thread;
+        m_thread = nullptr;
+    }
+
+    if(m_maker!=nullptr){
+        delete m_maker;
+        m_maker = nullptr;
+    }
+    qDebug()<<"end";
 }
 
 void Widget::mousePressEvent(QMouseEvent *event){
