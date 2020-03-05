@@ -92,5 +92,5 @@ void CMaker::start(){
         i++;
     }
 
-    //emit end();
+    emit end();
 }

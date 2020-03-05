@@ -131,7 +131,8 @@ void Widget::slt_make(){
 
     m_maker->moveToThread(m_thread);
     connect(m_thread,SIGNAL(started()),m_maker,SLOT(start()));
-    connect(m_maker,SIGNAL(end()),this,SLOT(slt_makeEnd()));
+    connect(m_maker,SIGNAL(end()),m_thread,SLOT(quit()));
+    connect(m_thread,SIGNAL(finished()),this,SLOT(slt_threadDestory()));
 
     m_thread->start();
 }
@@ -159,12 +160,10 @@ void Widget::slt_test(){
     mouseHook =SetWindowsHookEx( WH_MOUSE_LL,mouseProc,GetModuleHandle(NULL),NULL);//注册鼠标钩子
 }
 
-void Widget::slt_makeEnd(){
-    if(m_thread!=nullptr){
-        m_thread->terminate();
-        delete m_thread;
-        m_thread = nullptr;
-    }
+void Widget::slt_threadDestory(){
+    m_thread->deleteLater();
+    //m_thread = nullptr;
+    //qDebug()<<"delete thread";
 
     if(m_maker!=nullptr){
         delete m_maker;

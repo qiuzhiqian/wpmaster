@@ -45,7 +45,7 @@ public slots:
     void slt_test();
     void slt_make();
 
-    void slt_makeEnd();
+    void slt_threadDestory();
 
 protected:
 
