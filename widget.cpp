@@ -11,6 +11,12 @@
 #include <QScreen>
 #include <QFile>
 #include <QByteArray>
+#include <QPixmap>
+
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonValue>
 
 HHOOK mouseHook=NULL;
 
@@ -52,17 +58,22 @@ Widget::Widget(QWidget *parent)
         return;
     }
 
+    qDebug()<<"width:"<<ui->lb_cover->width();
+    //ui->lb_cover->setFixedHeight(ui->lb_cover->width());
+
     connect(ui->btn_openback,SIGNAL(clicked(bool)),this,SLOT(slt_openBackFile()));
     connect(ui->btn_openfront,SIGNAL(clicked(bool)),this,SLOT(slt_openFrontFile()));
     connect(ui->sld_alpha,SIGNAL(valueChanged(int)),this,SLOT(slt_alphaChange(int)));
     connect(ui->btn_save,SIGNAL(clicked(bool)),this,SLOT(slt_save()));
-    connect(ui->btn_test,SIGNAL(clicked(bool)),this,SLOT(slt_test()));
+    connect(ui->btn_load,SIGNAL(clicked(bool)),this,SLOT(slt_load()));
     connect(ui->btn_make,SIGNAL(clicked(bool)),this,SLOT(slt_make()));
 
     connect(ui->btn_close,SIGNAL(clicked(bool)),this,SLOT(slt_windowClose()));
     connect(ui->btn_min,SIGNAL(clicked(bool)),this,SLOT(slt_windowMin()));
     //qDebug() << "min:" << ui->sld_alpha->minimum();
     //qDebug() << "max:" << ui->sld_alpha->maximum();
+
+    m_maskTimer = new QTimer(this);
 
     HWND background = NULL;
     HWND hwnd = ::FindWindowA("progman","Program Manager");
@@ -87,6 +98,9 @@ Widget::Widget(QWidget *parent)
     HWND current = (HWND)m_mask->winId();
     SetParent(current,background);
     m_mask->show();
+
+    qDebug()<<"register hook";
+    mouseHook =SetWindowsHookEx( WH_MOUSE_LL,mouseProc,GetModuleHandle(NULL),NULL);//注册鼠标钩子
 }
 
 Widget::~Widget()
@@ -97,13 +111,13 @@ Widget::~Widget()
 void Widget::slt_openBackFile(){
     m_imagePath = QFileDialog::getOpenFileName(this,tr("Open File"),QDir::currentPath(),tr("Images (*.png *.jpg)"));
     m_mask->setBack(QImage(m_imagePath).convertToFormat(QImage::Format_ARGB32));
-    m_mask->update();
+    //m_mask->update();
 }
 
 void Widget::slt_openFrontFile(){
     m_imagePath = QFileDialog::getOpenFileName(this,tr("Open File"),QDir::currentPath(),tr("Images (*.png *.jpg)"));
     m_mask->setFront(QImage(m_imagePath).convertToFormat(QImage::Format_ARGB32));
-    m_mask->update();
+    //m_mask->update();
 }
 
 void Widget::slt_alphaChange(int value){
@@ -155,9 +169,61 @@ void Widget::slt_windowMin(){
     this->showMinimized();
 }
 
-void Widget::slt_test(){
-    qDebug()<<"register hook";
-    mouseHook =SetWindowsHookEx( WH_MOUSE_LL,mouseProc,GetModuleHandle(NULL),NULL);//注册鼠标钩子
+void Widget::slt_load(){
+    QString dirpath = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
+                                                      QDir::currentPath(),
+                                                      QFileDialog::ShowDirsOnly
+                                                      | QFileDialog::DontResolveSymlinks);
+    QFile file(dirpath+"/package.json");
+    if(!file.exists()){
+        return;
+    }
+
+    bool ok = file.open(QIODevice::ReadOnly);
+    if(!ok){
+        return;
+    }
+
+    QByteArray ba = file.readAll();
+    file.close();
+
+    QJsonParseError err;
+    QJsonDocument doc = QJsonDocument::fromJson(ba,&err);
+    if(doc.isNull()){
+        qDebug()<<"err:"<<err.errorString();
+        return;
+    }
+
+    if(!doc.isObject()){
+        return;
+    }
+
+    QJsonObject obj = doc.object();
+    QJsonValue val = obj.value("title");
+    if(!val.isString()){
+        return;
+    }
+    ui->lb_titleContent->setText(val.toString());
+
+    val = obj.value("auther");
+    if(!val.isString()){
+        return;
+    }
+    ui->lb_autherContent->setText(val.toString());
+
+    val = obj.value("email");
+    if(!val.isString()){
+        return;
+    }
+    ui->lb_emailContent->setText(val.toString());
+
+    val = obj.value("cover");
+    if(!val.isString()){
+        return;
+    }
+    QPixmap cover(dirpath+"/"+val.toString());
+    ui->lb_cover->setPixmap(cover.scaled(ui->lb_cover->width(),ui->lb_cover->width()));
+    //ui->lb_emailContent->setText(val.toString());
 }
 
 void Widget::slt_threadDestory(){

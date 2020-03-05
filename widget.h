@@ -6,6 +6,7 @@
 #include <QPoint>
 #include "cmaker.h"
 #include <QThread>
+#include <QTimer>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -32,6 +33,8 @@ private:
     QThread* m_thread;
     CMaker* m_maker;
 
+    QTimer* m_maskTimer;
+
 public slots:
     void slt_openBackFile();
     void slt_openFrontFile();
@@ -42,7 +45,7 @@ public slots:
     void slt_windowMax();
     void slt_windowMin();
 
-    void slt_test();
+    void slt_load();
     void slt_make();
 
     void slt_threadDestory();
