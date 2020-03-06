@@ -59,7 +59,7 @@ Widget::Widget(QWidget *parent)
     }
 
     qDebug()<<"width:"<<ui->lb_cover->width();
-    //ui->lb_cover->setFixedHeight(ui->lb_cover->width());
+    ui->lb_cover->setFixedHeight(512);
 
     connect(ui->btn_openback,SIGNAL(clicked(bool)),this,SLOT(slt_openBackFile()));
     connect(ui->btn_openfront,SIGNAL(clicked(bool)),this,SLOT(slt_openFrontFile()));
@@ -72,35 +72,6 @@ Widget::Widget(QWidget *parent)
     connect(ui->btn_min,SIGNAL(clicked(bool)),this,SLOT(slt_windowMin()));
     //qDebug() << "min:" << ui->sld_alpha->minimum();
     //qDebug() << "max:" << ui->sld_alpha->maximum();
-
-    m_maskTimer = new QTimer(this);
-
-    HWND background = NULL;
-    HWND hwnd = ::FindWindowA("progman","Program Manager");
-    HWND worker = NULL;
-    do{
-        worker = ::FindWindowExA(NULL,worker,"WorkerW",NULL);
-        if(worker!=NULL){
-            char buff[200] = {0};
-
-            int ret = GetClassName(worker,(WCHAR*)buff,sizeof(buff)*2);
-            if(ret == 0){
-                int err = GetLastError();
-                qDebug()<<"err:"<<err;
-            }
-            //QString className = QString::fromUtf16((char16_t*)buff);
-        }
-        if(GetParent(worker) == hwnd){
-            background = worker;
-        }
-    }while(worker !=NULL);
-
-    HWND current = (HWND)m_mask->winId();
-    SetParent(current,background);
-    m_mask->show();
-
-    qDebug()<<"register hook";
-    mouseHook =SetWindowsHookEx( WH_MOUSE_LL,mouseProc,GetModuleHandle(NULL),NULL);//注册鼠标钩子
 }
 
 Widget::~Widget()
@@ -116,7 +87,7 @@ void Widget::slt_openBackFile(){
 
 void Widget::slt_openFrontFile(){
     m_imagePath = QFileDialog::getOpenFileName(this,tr("Open File"),QDir::currentPath(),tr("Images (*.png *.jpg)"));
-    m_mask->setFront(QImage(m_imagePath).convertToFormat(QImage::Format_ARGB32));
+    m_mask->addFront(QImage(m_imagePath).convertToFormat(QImage::Format_ARGB32));
     //m_mask->update();
 }
 
@@ -223,7 +194,60 @@ void Widget::slt_load(){
     }
     QPixmap cover(dirpath+"/"+val.toString());
     ui->lb_cover->setPixmap(cover.scaled(ui->lb_cover->width(),ui->lb_cover->width()));
-    //ui->lb_emailContent->setText(val.toString());
+
+    val = obj.value("meta");
+    if(!val.isObject()){
+        return;
+    }
+
+    QJsonObject metaObj = val.toObject();
+    if(metaObj.isEmpty()){
+        return;
+    }
+
+    QJsonValue metaBase = metaObj.value("base");
+    if(!metaBase.isString()){
+        return;
+    }
+
+    QJsonValue metaCanvas = metaObj.value("canvas");
+    if(!metaCanvas.isString()){
+        return;
+    }
+
+    QJsonValue metaMask = metaObj.value("mask");
+    if(!metaMask.isString()){
+        return;
+    }
+
+    m_mask->loadPackage(QImage(dirpath+"/"+metaBase.toString()),QImage(dirpath+"/"+metaCanvas.toString()),dirpath+"/"+metaMask.toString());
+
+    HWND background = NULL;
+    HWND hwnd = ::FindWindowA("progman","Program Manager");
+    HWND worker = NULL;
+    do{
+        worker = ::FindWindowExA(NULL,worker,"WorkerW",NULL);
+        if(worker!=NULL){
+            char buff[200] = {0};
+
+            int ret = GetClassName(worker,(WCHAR*)buff,sizeof(buff)*2);
+            if(ret == 0){
+                int err = GetLastError();
+                qDebug()<<"err:"<<err;
+            }
+            //QString className = QString::fromUtf16((char16_t*)buff);
+        }
+        if(GetParent(worker) == hwnd){
+            background = worker;
+        }
+    }while(worker !=NULL);
+
+    HWND current = (HWND)m_mask->winId();
+    SetParent(current,background);
+    m_mask->show();
+
+    qDebug()<<"register hook";
+    mouseHook =SetWindowsHookEx( WH_MOUSE_LL,mouseProc,GetModuleHandle(NULL),NULL);//注册鼠标钩子
 }
 
 void Widget::slt_threadDestory(){

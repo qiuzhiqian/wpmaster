@@ -33,8 +33,6 @@ private:
     QThread* m_thread;
     CMaker* m_maker;
 
-    QTimer* m_maskTimer;
-
 public slots:
     void slt_openBackFile();
     void slt_openFrontFile();
