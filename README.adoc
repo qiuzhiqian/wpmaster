@@ -13,12 +13,13 @@ https://github.com/qiuzhiqian/wpmaster[本项目地址]
 
 image::https://raw.githubusercontent.com/qiuzhiqian/wpmaster/master/doc/image/review_1.gif[操作]
 image::https://raw.githubusercontent.com/qiuzhiqian/wpmaster/master/doc/image/review_2.gif[效果]
-
+image::https://raw.githubusercontent.com/qiuzhiqian/wpmaster/master/doc/image/review_3.gif[动态scene包]
 
 
 == 特性
 - 无干扰的独立壁纸层
 - 鼠标跟随实时去衣
+- scene数据包制作与动态效果实现
 
 本工程基于QT实现，涉及到一些Windows的原生API操作，请查看微软doc文档。
 
@@ -125,3 +126,77 @@ this->setWindowFlags(Qt::FramelessWindowHint);
 ....
 
 当然在这个设计过程中还遇到了一些其他的问题，比如显示两张图片是我最早使用的方案是用两个QLabel上下叠加来显示，但是这样在操作上很蛋疼。当然这些问题都顺利的解决掉了。
+
+== scene数据包制作与动态效果实现
+我们在使用wallpaper engine时，经常会发现一些动态图片，而这些动态图片并不是常规的gif动图，而是一个后缀名为pkg的数据包，官方称作为scene类型。这种数据类型在wallpaper engine中很常见。我们通过使用RePKG这个开源工具解开scene数据包，可以提取里面的一些基本的静态图片。通过提取出来的文件，我们大致猜测wallpaper engine的工作流程。
+
+所谓动态图片无非就是一帧一帧的图片连续显示。
+由于scene的图片动态范围和幅度一般都很小，如果我们保存原始的每一帧图片，那么压缩包会很大。由于相连帧的变化一般都很小，如果我们取相连帧的差值，并保存为图片，那么这些图像会存在大量的连续重复像素(以#000000为主)，这样的图片是很容易无损压缩的。所以体积会比较小。
+
+所以我们保存的图片只是一张最原始的图片(第一帧)，然后就是第一帧和第二帧取diff值图片，然后就是第二帧和第三帧diff图片，一次类推。这样复原的时候我们只需要通过第一帧和第一个diff图片通过像素相加后取得第二张图，然后用第二张图和第二个diff图片通过像素相加后取得第三张图，一次类推就可以复原所有图片了。然后依次按照一定的时间间隔显示即可。
+
+目前wallpaper engine的pkg包的diff规律还没有找到，我只能按照自己的理解来实现一个自己可用的算法，导致目前的软件跟wallpaper engine的scene包解析无法兼容。所以本软件的scene包需要自己手动制作(软件中集成了make制作按键，但是只能完成部分主要工作，还是需要人手动参与一部分操作，后续会完善制作工具)，而无法直接导入官方scene包。
+
+这是diff算法部分
+[source.cpp]
+....
+QColor CUtils::colorDiff(const QColor &clr1, const QColor &clr2){
+    quint8 red = quint8(clr1.red()) - quint8(clr2.red());
+    quint8 green = quint8(clr1.green()) - quint8(clr2.green());
+    quint8 blue = quint8(clr1.blue()) - quint8(clr2.blue());
+
+    return QColor(red,green,blue);
+}
+
+QImage CUtils::imageDiff(const QImage& img1,const QImage& img2){
+    QImage tmpImage(img1);
+
+    if(img1.size() != img2.size()){
+        return tmpImage;
+    }
+
+    int width = img1.width();
+    int height = img1.height();
+    for(int y=0;y<height;y++){
+        for(int x=0;x<width;x++){
+            tmpImage.setPixelColor(x,y,colorDiff(img1.pixelColor(x,y),img2.pixelColor(x,y)));
+        }
+    }
+
+    return tmpImage;
+}
+....
+
+这是合成算法部分
+[source.cpp]
+....
+QColor CUtils::colorAdd(const QColor &clr1, const QColor &clr2){
+    quint8 red = quint8(clr1.red()) + quint8(clr2.red());
+    quint8 green = quint8(clr1.green()) + quint8(clr2.green());
+    quint8 blue = quint8(clr1.blue()) + quint8(clr2.blue());
+
+    return QColor(red,green,blue);
+}
+
+QImage CUtils::imageAdd(const QImage& img1,const QImage& img2){
+    QImage tmpImage(img1);
+
+    if(img1.size() != img2.size()){
+        return tmpImage;
+    }
+
+    int width = img1.width();
+    int height = img1.height();
+    for(int y=0;y<height;y++){
+        for(int x=0;x<width;x++){
+            tmpImage.setPixelColor(x,y,colorAdd(img1.pixelColor(x,y),img2.pixelColor(x,y)));
+        }
+    }
+
+    return tmpImage;
+}
+....
+
+此处提供一个测试可用的scene包
+
+https://github.com/qiuzhiqian/wpmaster[scene示例]
