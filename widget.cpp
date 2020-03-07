@@ -215,12 +215,13 @@ void Widget::slt_load(){
         return;
     }
 
+    QString maskStr = "";
     QJsonValue metaMask = metaObj.value("mask");
-    if(!metaMask.isString()){
-        return;
+    if(metaMask.isString()){
+        maskStr = dirpath+"/"+metaMask.toString();
     }
 
-    m_mask->loadPackage(QImage(dirpath+"/"+metaBase.toString()),QImage(dirpath+"/"+metaCanvas.toString()),dirpath+"/"+metaMask.toString());
+    m_mask->loadPackage(QImage(dirpath+"/"+metaBase.toString()),QImage(dirpath+"/"+metaCanvas.toString()),maskStr);
 
     HWND background = NULL;
     HWND hwnd = ::FindWindowA("progman","Program Manager");

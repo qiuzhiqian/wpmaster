@@ -46,13 +46,10 @@ CMask::~CMask(){
     }
 }
 
-void CMask::loadPackage(const QImage& base,const QImage& canvas,const QString& maskPath){
-    m_back = canvas;
-    if(!m_front.isEmpty()){
-        m_front.clear();
+void CMask::loadMaskFile(const QString maskPath,const QImage& base){
+    if(maskPath == ""){
+        return;
     }
-
-    m_front.append(base);
 
     QFile file(maskPath+"/config.json");
     if(!file.exists()){
@@ -106,9 +103,24 @@ void CMask::loadPackage(const QImage& base,const QImage& canvas,const QString& m
             img2=tmpImage;
         }
     }
+}
 
-    connect(m_switchTimer,SIGNAL(timeout()),this,SLOT(slt_switch()));
-    m_switchTimer->start(60);
+void CMask::loadPackage(const QImage& base,const QImage& canvas,const QString& maskPath){
+    m_back = canvas;
+    if(!m_front.isEmpty()){
+        m_front.clear();
+    }
+
+    m_front.append(base);
+
+    loadMaskFile(maskPath,base);
+
+    if(m_front.size()>1){
+        connect(m_switchTimer,SIGNAL(timeout()),this,SLOT(slt_switch()));
+        m_switchTimer->start(60);
+    }
+    m_currentIndex = 0;
+    m_oldIndex = 0;
 }
 
 void CMask::setBack(const QImage &image){

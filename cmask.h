@@ -34,6 +34,7 @@ private:
 
     void setImageAlpha(QImage &image,const QRect& rect,int alpha);
     const QImage layerAdd(const QImage& base,const QImage& ext,QRect rect);
+    void loadMaskFile(const QString maskPath,const QImage& base);
 protected:
     virtual void paintEvent(QPaintEvent *event) override;
     virtual void mouseMoveEvent(QMouseEvent *event) override;
