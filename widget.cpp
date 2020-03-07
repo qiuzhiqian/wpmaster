@@ -59,45 +59,18 @@ Widget::Widget(QWidget *parent)
     }
 
     qDebug()<<"width:"<<ui->lb_cover->width();
-    ui->lb_cover->setFixedHeight(512);
+    ui->lb_cover->setFixedHeight(432);
 
-    connect(ui->btn_openback,SIGNAL(clicked(bool)),this,SLOT(slt_openBackFile()));
-    connect(ui->btn_openfront,SIGNAL(clicked(bool)),this,SLOT(slt_openFrontFile()));
-    connect(ui->sld_alpha,SIGNAL(valueChanged(int)),this,SLOT(slt_alphaChange(int)));
-    connect(ui->btn_save,SIGNAL(clicked(bool)),this,SLOT(slt_save()));
     connect(ui->btn_load,SIGNAL(clicked(bool)),this,SLOT(slt_load()));
     connect(ui->btn_make,SIGNAL(clicked(bool)),this,SLOT(slt_make()));
 
     connect(ui->btn_close,SIGNAL(clicked(bool)),this,SLOT(slt_windowClose()));
     connect(ui->btn_min,SIGNAL(clicked(bool)),this,SLOT(slt_windowMin()));
-    //qDebug() << "min:" << ui->sld_alpha->minimum();
-    //qDebug() << "max:" << ui->sld_alpha->maximum();
 }
 
 Widget::~Widget()
 {
     delete ui;
-}
-
-void Widget::slt_openBackFile(){
-    m_imagePath = QFileDialog::getOpenFileName(this,tr("Open File"),QDir::currentPath(),tr("Images (*.png *.jpg)"));
-    m_mask->setBack(QImage(m_imagePath).convertToFormat(QImage::Format_ARGB32));
-    //m_mask->update();
-}
-
-void Widget::slt_openFrontFile(){
-    m_imagePath = QFileDialog::getOpenFileName(this,tr("Open File"),QDir::currentPath(),tr("Images (*.png *.jpg)"));
-    m_mask->addFront(QImage(m_imagePath).convertToFormat(QImage::Format_ARGB32));
-    //m_mask->update();
-}
-
-void Widget::slt_alphaChange(int value){
-    //m_mask->update();
-    int alpha = value*255/100;
-    m_mask->setAlpha(alpha);
-}
-
-void Widget::slt_save(){
 }
 
 void Widget::slt_make(){
@@ -225,23 +198,37 @@ void Widget::slt_load(){
 
     HWND background = NULL;
     HWND hwnd = ::FindWindowA("progman","Program Manager");
-    HWND worker = NULL;
-    do{
-        worker = ::FindWindowExA(NULL,worker,"WorkerW",NULL);
-        if(worker!=NULL){
-            char buff[200] = {0};
+    int retry = 0;
+    while(1){
+        HWND worker = NULL;
+        do{
+            worker = ::FindWindowExA(NULL,worker,"WorkerW",NULL);
+            if(worker!=NULL){
+                char buff[200] = {0};
 
-            int ret = GetClassName(worker,(WCHAR*)buff,sizeof(buff)*2);
-            if(ret == 0){
-                int err = GetLastError();
-                qDebug()<<"err:"<<err;
+                int ret = GetClassName(worker,(WCHAR*)buff,sizeof(buff)*2);
+                if(ret == 0){
+                    int err = GetLastError();
+                    qDebug()<<"err:"<<err;
+                }
+                //QString className = QString::fromUtf16((char16_t*)buff);
             }
-            //QString className = QString::fromUtf16((char16_t*)buff);
+            if(GetParent(worker) == hwnd){
+                background = worker;
+            }
+        }while(worker !=NULL);
+
+        if(background == NULL){
+            SendMessageA(hwnd,0x052C,0,0);
+            qDebug()<<"send message to create WorkerW";
+        }else{
+            break;
         }
-        if(GetParent(worker) == hwnd){
-            background = worker;
+        if(retry++ > 3){
+            return;
         }
-    }while(worker !=NULL);
+    }
+
 
     HWND current = (HWND)m_mask->winId();
     SetParent(current,background);

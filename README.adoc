@@ -65,6 +65,12 @@ do{
 ....
 
 上面代码中background就是我们查找到的目标窗口
+但是默认情况下，我们可能根本找不到我们需要的这个WorkerW窗口。
+
+image::https://raw.githubusercontent.com/qiuzhiqian/wpmaster/master/doc/image/image_2.png[窗口结构]
+
+具体的原因可以参考 https://github.com/qiuzhiqian/wallpaper[下面这篇文章] 的解释。这篇文章中也给出了处理方法，就是通过SendMessage函数向progman窗口发送0x052C的消息。这时候 Program 窗口就产生两个WorkerW窗口。我们就可以找到我们需要的窗口了。
+
 接着我们需要将我们的壁纸画布窗口设置成background的子窗口，并将画布窗口显示出来
 
 [source.cpp]

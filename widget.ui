@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>530</width>
-    <height>653</height>
+    <width>450</width>
+    <height>639</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -111,27 +111,6 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="btn_openback">
-       <property name="text">
-        <string>back</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btn_openfront">
-       <property name="text">
-        <string>front</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btn_save">
-       <property name="text">
-        <string>save</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="btn_load">
        <property name="text">
         <string>load</string>
@@ -157,24 +136,6 @@
         </size>
        </property>
       </spacer>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0">
-     <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Alpha</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSlider" name="sld_alpha">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
      </item>
     </layout>
    </item>
