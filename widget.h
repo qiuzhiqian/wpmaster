@@ -33,6 +33,12 @@ private:
     QThread* m_thread;
     CMaker* m_maker;
 
+#ifdef _WIN32
+    void registerGolbalMouseEvent();
+#endif
+
+void setBackGroundWMChild(QWidget* widget);
+
 public slots:
     void slt_windowClose();
     void slt_windowMax();

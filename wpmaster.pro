@@ -19,7 +19,6 @@ SOURCES += \
     cmaker.cpp \
     cmask.cpp \
     cutils.cpp \
-    hwndnode.cpp \
     main.cpp \
     widget.cpp
 
@@ -27,7 +26,6 @@ HEADERS += \
     cmaker.h \
     cmask.h \
     cutils.h \
-    hwndnode.h \
     widget.h
 
 FORMS += \

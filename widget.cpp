@@ -1,6 +1,9 @@
 #include "widget.h"
 #include "ui_widget.h"
+
+#ifdef _WIN32
 #include "windows.h"
+#endif
 
 #include <QFileDialog>
 #include <QDir>
@@ -18,6 +21,7 @@
 #include <QJsonArray>
 #include <QJsonValue>
 
+#ifdef _WIN32
 HHOOK mouseHook=NULL;
 
 extern Widget* w;
@@ -38,6 +42,7 @@ LRESULT CALLBACK mouseProc(int nCode,WPARAM wParam,LPARAM lParam )
     //qDebug()<<nCode<<","<<wParam<<","<<lParam;
     return CallNextHookEx(mouseHook,nCode,wParam,lParam);//返回给下一个钩子子程处理
 }
+#endif
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -53,7 +58,7 @@ Widget::Widget(QWidget *parent)
     QList<QScreen *> screenList = QGuiApplication::screens();
 
     if(screenList.size()>0){
-        m_mask->setFixedSize(screenList.at(0)->availableSize());
+        m_mask->setFixedSize(screenList.at(0)->size()*screenList.at(0)->devicePixelRatio());
     }else{
         return;
     }
@@ -98,8 +103,10 @@ void Widget::slt_make(){
 void Widget::slt_windowClose(){
     delete m_mask;
 
+#ifdef _WIN32
     //调用该函数刷新壁纸，使得壁纸恢复
     SystemParametersInfoA(SPI_SETDESKWALLPAPER,0,NULL,SPIF_SENDWININICHANGE);
+#endif
 
     //关闭窗口
     this->close();
@@ -196,6 +203,40 @@ void Widget::slt_load(){
 
     m_mask->loadPackage(QImage(dirpath+"/"+metaBase.toString()),QImage(dirpath+"/"+metaCanvas.toString()),maskStr);
 
+    setBackGroundWMChild(m_mask);
+
+    m_mask->show();
+
+#ifdef _WIN32
+    registerGolbalMouseEvent();
+#endif
+}
+
+void Widget::slt_threadDestory(){
+    m_thread->deleteLater();
+    //m_thread = nullptr;
+    //qDebug()<<"delete thread";
+
+    if(m_maker!=nullptr){
+        delete m_maker;
+        m_maker = nullptr;
+    }
+    qDebug()<<"end";
+}
+
+void Widget::mousePressEvent(QMouseEvent *event){
+    m_lastPos = event->globalPos();
+    QWidget::mousePressEvent(event);
+}
+
+void Widget::mouseMoveEvent(QMouseEvent *event){
+    move(this->pos()+(event->globalPos()-m_lastPos));
+    m_lastPos = event->globalPos();
+    QWidget::mouseMoveEvent(event);
+}
+
+#ifdef _WIN32
+void Widget::setBackGroundWMChild(QWidget* widget){
     HWND background = NULL;
     HWND hwnd = ::FindWindowA("progman","Program Manager");
     int retry = 0;
@@ -230,33 +271,16 @@ void Widget::slt_load(){
     }
 
 
-    HWND current = (HWND)m_mask->winId();
+    HWND current = (HWND)widget->winId();
     SetParent(current,background);
-    m_mask->show();
+}
 
+void Widget::registerGolbalMouseEvent(){
     qDebug()<<"register hook";
     mouseHook =SetWindowsHookEx( WH_MOUSE_LL,mouseProc,GetModuleHandle(NULL),NULL);//注册鼠标钩子
 }
-
-void Widget::slt_threadDestory(){
-    m_thread->deleteLater();
-    //m_thread = nullptr;
-    //qDebug()<<"delete thread";
-
-    if(m_maker!=nullptr){
-        delete m_maker;
-        m_maker = nullptr;
-    }
-    qDebug()<<"end";
+#else
+void Widget::setBackGroundWMChild(QWidget* widget){
+    Q_UNUSED(widget);
 }
-
-void Widget::mousePressEvent(QMouseEvent *event){
-    m_lastPos = event->globalPos();
-    QWidget::mousePressEvent(event);
-}
-
-void Widget::mouseMoveEvent(QMouseEvent *event){
-    move(this->pos()+(event->globalPos()-m_lastPos));
-    m_lastPos = event->globalPos();
-    QWidget::mouseMoveEvent(event);
-}
+#endif
