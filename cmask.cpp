@@ -9,6 +9,7 @@
 #include <QJsonArray>
 #include <QJsonValue>
 
+#include <QScreen>
 #include "cutils.h"
 
 CMask::CMask(QWidget *parent) : QWidget(parent),
@@ -147,15 +148,19 @@ void CMask::paintEvent(QPaintEvent *event){
     QWidget::paintEvent(event);
 
     if(m_front.size()>0 && m_currentIndex<m_front.size()){
+        qreal ratio = this->screen()->devicePixelRatio();
         QPainter painter(this);
-        painter.drawImage(this->rect(),layerAdd(m_front.at(m_currentIndex),m_back,m_mask),this->rect());
+        QImage tmpImage = layerAdd(m_front.at(m_currentIndex),m_back,m_mask);
+        QSize tmpSize(tmpImage.size().width()/ratio,tmpImage.size().height()/ratio);
+        painter.drawImage(this->rect(),tmpImage.scaled(tmpSize),this->rect());
     }
 }
 
 void CMask::mouseMoveEvent(QMouseEvent *event){
     QWidget::mouseMoveEvent(event);
 
-    m_mask = QRect(event->pos().x()-m_radius/2,event->pos().y()-m_radius/2,m_radius,m_radius);
+    qreal ratio = this->screen()->devicePixelRatio();
+    m_mask = QRect( (event->pos().x()-m_radius/2)*ratio, (event->pos().y()-m_radius/2)*ratio,m_radius*ratio,m_radius*ratio);
     update();
 }
 

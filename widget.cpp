@@ -1,10 +1,6 @@
 #include "widget.h"
 #include "ui_widget.h"
 
-#ifdef _WIN32
-#include "windows.h"
-#endif
-
 #include <QFileDialog>
 #include <QDir>
 #include <QSlider>
@@ -20,6 +16,13 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonValue>
+
+#ifdef _WIN32
+#include "windows.h"
+#else
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#endif
 
 #ifdef _WIN32
 HHOOK mouseHook=NULL;
@@ -58,7 +61,7 @@ Widget::Widget(QWidget *parent)
     QList<QScreen *> screenList = QGuiApplication::screens();
 
     if(screenList.size()>0){
-        m_mask->setFixedSize(screenList.at(0)->size()*screenList.at(0)->devicePixelRatio());
+        m_mask->setFixedSize(screenList.at(0)->size());
     }else{
         return;
     }
@@ -71,6 +74,8 @@ Widget::Widget(QWidget *parent)
 
     connect(ui->btn_close,SIGNAL(clicked(bool)),this,SLOT(slt_windowClose()));
     connect(ui->btn_min,SIGNAL(clicked(bool)),this,SLOT(slt_windowMin()));
+
+    //qDebug() << "winid:" << this->winId();
 }
 
 Widget::~Widget()
@@ -280,7 +285,50 @@ void Widget::registerGolbalMouseEvent(){
     mouseHook =SetWindowsHookEx( WH_MOUSE_LL,mouseProc,GetModuleHandle(NULL),NULL);//注册鼠标钩子
 }
 #else
+extern Window Window_With_Name(Display *dpy,Window top, char *name);
 void Widget::setBackGroundWMChild(QWidget* widget){
     Q_UNUSED(widget);
+
+    auto display = XOpenDisplay(nullptr);
+    auto root_window = DefaultRootWindow(display);
+    Window w = Window_With_Name(display,root_window,"桌面");
+    qDebug()<<"XID:"<<w;
+}
+
+Window Window_With_Name(Display *dpy,Window top, char *name)
+{
+    Window *children, dummy;
+    unsigned int nchildren;
+    int i;
+    Window w=0;
+    XClassHint *class_hint;
+    class_hint = XAllocClassHint();
+    int ret = 0;
+
+    // find by WM_CLASS(STRING) = "mywindow", "MyWindow"
+    if(XGetClassHint(dpy, top, class_hint)){
+        if(strstr(class_hint->res_name, name) == class_hint->res_name){
+            ret = 1;
+        }
+        if(!class_hint->res_class){
+            XFree(class_hint->res_class);
+            XFree(class_hint->res_name);
+        }
+        if(ret){
+            return(top);
+        }
+    }
+
+    if(!XQueryTree(dpy, top, &dummy, &dummy, &children, &nchildren))
+    return(0);
+
+    for(i=0; i<nchildren; i++)
+    {
+        w = Window_With_Name(dpy, children[i], name);
+        if (w)
+        break;
+    }
+    if(children) XFree ((char *)children);
+    return(w);
 }
 #endif
